@@ -4,6 +4,24 @@ Ultra lite C preprocessor. Using  java annotation processor
 Tested jvm versions: 8
 
 # Example
+Annotation "@Define" works from anywhere, 
+I advise you to use it like this:
+```java
+
+/**
+ * File: package-info.java
+ * Created on 28.12.2021, 14:54:08
+ *
+ * @author LWJGL2
+ */
+@Define({
+    "USE_PRINT",
+    "NOT_PRINT_WELCOME_MESSAGE"
+})
+package annotationtest;
+
+import net.steelswing.clp.annotation.Define;
+```
 
 ### JAVA SOURCE
 ```java
