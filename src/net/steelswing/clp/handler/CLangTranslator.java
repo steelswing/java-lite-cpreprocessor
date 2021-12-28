@@ -33,6 +33,7 @@ public class CLangTranslator extends TreeTranslator {
 
     private final List<JCTree.JCStatement> emptyStatements = List.nil();
     private final List<JCTree.JCExpression> emptyExpressions = List.nil();
+    public boolean throwsException = true;
 
     public CLangTranslator(ClangProcessor main, TreeMaker treeMaker, Names names, Messager messager) {
         this.main = main;
@@ -46,11 +47,48 @@ public class CLangTranslator extends TreeTranslator {
     public void visitMethodDef(JCTree.JCMethodDecl jcMethodDecl) {
         JCTree.JCBlock jcBlock = jcMethodDecl.getBody();
         jcBlock.stats = emptyStatements;
+        JCTree returnType = jcMethodDecl.getReturnType();
 
-        jcBlock.stats = jcBlock.getStatements().append(getThrowStatement());
-//        JCTree.JCStatement aNull = treeMaker.Return(treeMaker.Literal(TypeTag.VOID, null));
-//        jcBlock.stats= jcBlock.getStatements().append(aNull);
-//
+        if (throwsException) {
+            jcBlock.stats = jcBlock.getStatements().append(getThrowStatement(jcMethodDecl.getName().toString()));
+        } else {
+            JCTree.JCStatement aNull = null;
+            switch (returnType.toString()) {
+                case "int":
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.INT, 0));
+                    break;
+                case "float":
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.FLOAT, 0.0f));
+                    break;
+                case "double":
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.DOUBLE, 0.0));
+                    break;
+                case "char":
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.CHAR, '\0'));
+                    break;
+                case "short":
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.SHORT, 0));
+                    break;
+                case "long":
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.LONG, 0L));
+                    break;
+                case "byte":
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.BYTE, 0));
+                    break;
+                case "boolean":
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.BOOLEAN, 0));
+                    break;
+                case "void":
+                    break;
+                default:
+                    aNull = treeMaker.Return(treeMaker.Literal(TypeTag.BOT, null));
+                    break;
+            }
+            if (aNull != null) {
+                jcBlock.stats = jcBlock.getStatements().append(aNull);
+            }
+        }
+
         super.visitMethodDef(jcMethodDecl);
     }
 
@@ -95,11 +133,11 @@ public class CLangTranslator extends TreeTranslator {
         );
     }
 
-    private JCStatement getThrowStatement() throws UnsupportedOperationException {
+    private JCStatement getThrowStatement(String name) throws UnsupportedOperationException {
         JCTree.JCStatement throwStaement = treeMaker.Throw(treeMaker.NewClass(
                 null, emptyExpressions,
                 buildExceptionClassExpression("java.lang.UnsupportedOperationException", treeMaker, names),
-                List.of(JCLiterals.stringValue(treeMaker, "Method is not defined.")),
+                List.of(JCLiterals.stringValue(treeMaker, "Method " + name + " is not defined.")),
                 null
         ));
         return treeMaker.Block(0, List.of(throwStaement));

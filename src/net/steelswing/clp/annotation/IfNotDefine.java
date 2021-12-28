@@ -22,10 +22,9 @@ import java.lang.annotation.Target;
 @Documented
 @Inherited
 @Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
-public @interface IfDefine {
+public @interface IfNotDefine {
 
     public String[] value();
-
-   public  boolean throwsException() default true;
+    public boolean throwsException() default true;
 
 }

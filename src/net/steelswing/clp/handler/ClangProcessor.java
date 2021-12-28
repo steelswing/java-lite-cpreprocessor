@@ -31,6 +31,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic.Kind;
 import net.steelswing.clp.annotation.Define;
 import net.steelswing.clp.annotation.IfDefine;
+import net.steelswing.clp.annotation.IfNotDefine;
 import static net.steelswing.clp.handler.ReflectUtil.getField;
 
 /**
@@ -70,6 +71,7 @@ public class ClangProcessor extends AbstractProcessor {
                 defines.addAll(Arrays.asList(annotation.value()));
             }
         }
+        // bad code
         for (Element e : roundEnv.getElementsAnnotatedWith(IfDefine.class)) {
             IfDefine annotation = e.getAnnotation(IfDefine.class);
             if (e.getKind() == ElementKind.METHOD || e.getKind() == ElementKind.CONSTRUCTOR) {
@@ -84,7 +86,28 @@ public class ClangProcessor extends AbstractProcessor {
                 
                 if (!contains) {
                     // remove method body
+                    translator.throwsException = annotation.throwsException();
                     ((JCTree) trees.getTree(e)).accept(translator);
+                     translator.throwsException = true;
+                }
+            }
+        }
+        // bad code
+        for (Element e : roundEnv.getElementsAnnotatedWith(IfNotDefine.class)) {
+            IfNotDefine annotation = e.getAnnotation(IfNotDefine.class);
+            if (e.getKind() == ElementKind.METHOD || e.getKind() == ElementKind.CONSTRUCTOR) {
+                boolean contains = false;
+                for (String string : annotation.value()) {
+                    if(contains = defines.contains(string)) {
+                        contains = true;
+                        break;
+                    }
+                }
+                if (contains) {
+                    // remove method body
+                    translator.throwsException = annotation.throwsException();
+                    ((JCTree) trees.getTree(e)).accept(translator);
+                    translator.throwsException = true;
                 }
             }
         }
